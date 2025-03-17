@@ -1,41 +1,14 @@
-import path from 'path'
-import { app, ipcMain } from 'electron'
-import serve from 'electron-serve'
-import { createWindow } from './helpers'
+import {app} from 'electron'
+import {App} from "./app/app";
 
-const isProd = process.env.NODE_ENV === 'production'
+!async function(){
+    const app = new App({
+        dirname: __dirname,
+    });
 
-if (isProd) {
-  serve({ directory: 'app' })
-} else {
-  app.setPath('userData', `${app.getPath('userData')} (development)`)
-}
-
-;(async () => {
-  await app.whenReady()
-
-  const mainWindow = createWindow('main', {
-    width: 1000,
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    },
-  })
-
-  if (isProd) {
-    await mainWindow.loadURL('app://./home')
-    mainWindow.webContents.openDevTools()
-  } else {
-    const port = process.argv[2]
-    await mainWindow.loadURL(`http://localhost:${port}/home`)
-    mainWindow.webContents.openDevTools()
-  }
-})()
+    const win = await app.launch();
+}();
 
 app.on('window-all-closed', () => {
-  app.quit()
-})
-
-ipcMain.on('message', async (event, arg) => {
-  event.reply('message', `${arg} World!`)
-})
+    app.quit()
+});
